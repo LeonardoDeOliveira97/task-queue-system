@@ -3,7 +3,7 @@ package com.leonardodeoliveira97.task_queue_system.controller;
 import com.leonardodeoliveira97.task_queue_system.messaging.TaskProducer;
 import com.leonardodeoliveira97.task_queue_system.model.Task;
 import com.leonardodeoliveira97.task_queue_system.model.TaskStatus;
-import com.leonardodeoliveira97.task_queue_system.repository.TaskRepository;
+import com.leonardodeoliveira97.task_queue_system.service.TaskService;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -12,20 +12,20 @@ import java.util.List;
 @RestController
 @RequestMapping("/tasks")
 public class TaskController {
-    private final TaskRepository repository;
+    private final TaskService taskService;
     private final TaskProducer producer;
 
-    public TaskController(TaskRepository repository, TaskProducer producer) {
-        this.repository = repository;
+    public TaskController(TaskService service, TaskProducer producer) {
+        this.taskService = service;
         this.producer = producer;
     }
 
     @PostMapping
-    public Task create(@RequestBody Task task) {
+    public Task createTask(@RequestBody Task task) {
         task.setStatus(TaskStatus.PENDING);
         task.setCreatedAt(LocalDateTime.now());
 
-        Task saved = repository.save(task);
+        Task saved = taskService.createTask(task);
 
         producer.send(saved);
 
@@ -33,12 +33,12 @@ public class TaskController {
     }
 
     @GetMapping
-    public List<Task> getAll() {
-        return repository.findAll();
+    public List<Task> getAllTasks() {
+        return taskService.getAllTasks();
     }
 
     @GetMapping("/{id}")
-    public Task getById(@PathVariable Long id) {
-        return repository.findById(id).orElseThrow();
+    public Task getTaskById(@PathVariable Long id) {
+        return taskService.getTaskById(id);
     }
 }
